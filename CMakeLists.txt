@@ -1,22 +1,14 @@
 cmake_minimum_required(VERSION 3.22)
-
 set(EIPSCANNER_MAJOR_VERSION 1)
 set(EIPSCANNER_MINOR_VERSION 1)
 set(EIPSCANNER_PATCH_VERSION 0)
-set(EIPSCANNER_FULL_VERSION
-    ${EIPSCANNER_MAJOR_VERSION}.${EIPSCANNER_MINOR_VERSION}.${EIPSCANNER_PATCH_VERSION}
-)
-
+set(EIPSCANNER_FULL_VERSION ${EIPSCANNER_MAJOR_VERSION}.${EIPSCANNER_MINOR_VERSION}.${EIPSCANNER_PATCH_VERSION})
 project(eip_scanner VERSION ${EIPSCANNER_FULL_VERSION})
 
 find_package(ament_cmake REQUIRED)
 
-set(EIP_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
-set(EIP_INCLUDE_DIR
-    ${CMAKE_INSTALL_PREFIX}/include
-    CACHE INTERNAL "")
-
-set(SOURCE_FILES
+add_library(
+    ${PROJECT_NAME} SHARED
     src/cip/connectionManager/ForwardCloseRequest.cpp
     src/cip/connectionManager/ForwardOpenRequest.cpp
     src/cip/connectionManager/LargeForwardOpenRequest.cpp
@@ -53,60 +45,28 @@ set(SOURCE_FILES
     src/MessageRouter.cpp
     src/ParameterObject.cpp
     src/SessionInfo.cpp)
-
-file(
-  GLOB_RECURSE EIP_HEADER_FILES
-  RELATIVE ${EIP_SOURCE_DIR}
-  ${EIP_SOURCE_DIR}/*.h**)
-list(FILTER EIP_HEADER_FILES EXCLUDE REGEX ^vendor) # remove vendor files
-
-add_custom_target(copyIncludeFiles)
-foreach(file ${EIP_HEADER_FILES})
-  set(sourceFile ${EIP_SOURCE_DIR}/${file})
-  set(destinationFile ${EIP_INCLUDE_DIR}/${PROJECT_NAME}/${file})
-  add_custom_command(
-    TARGET copyIncludeFiles
-    PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${sourceFile} ${destinationFile}
-    BYPRODUCTS ${destinationFile}
-    VERBATIM)
-endforeach()
-
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${EIP_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PRIVATE ${EIP_SOURCE_DIR})
-add_dependencies(${PROJECT_NAME} copyIncludeFiles)
-include_directories(${EIP_INCLUDE_DIR})
-
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+                                                  $<INSTALL_INTERFACE:include>
+                                                  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 set_target_properties(
-  ${PROJECT_NAME}
-  PROPERTIES VERSION ${EIPSCANNER_FULL_VERSION}
-             SOVERSION ${EIPSCANNER_MAJOR_VERSION}
-             CXX_STANDARD 14
-             CXX_STANDARD_REQUIRED YES
-             CXX_EXTENSIONS OFF)
-
-add_library(${PROJECT_NAME}S STATIC ${SOURCE_FILES})
-target_include_directories(${PROJECT_NAME}S PRIVATE ${EIP_SOURCE_DIR})
-add_dependencies(${PROJECT_NAME}S copyIncludeFiles)
+    ${PROJECT_NAME}
+    PROPERTIES VERSION ${EIPSCANNER_FULL_VERSION}
+               SOVERSION ${EIPSCANNER_MAJOR_VERSION}
+               CXX_STANDARD 20
+               CXX_STANDARD_REQUIRED YES
+               CXX_EXTENSIONS OFF)
 
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 
-set_target_properties(
-  ${PROJECT_NAME}S
-  PROPERTIES VERSION ${EIPSCANNER_FULL_VERSION}
-             SOVERSION ${EIPSCANNER_MAJOR_VERSION}
-             CXX_STANDARD 20
-             CXX_STANDARD_REQUIRED YES
-             CXX_EXTENSIONS OFF)
-
 install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}Targets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES
-  DESTINATION include)
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Targets
+    LIBRARY DESTINATION lib)
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/src/
+    DESTINATION include/${PROJECT_NAME}
+    FILES_MATCHING
+    PATTERN "*.h*"
+    PATTERN "vendor" EXCLUDE)
 
 ament_package()
