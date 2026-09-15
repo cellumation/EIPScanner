@@ -56,6 +56,12 @@ namespace eipScanner {
 
 	IOConnection::WPtr
 	ConnectionManager::forwardOpen(const SessionInfoIf::SPtr& si, ConnectionParameters connectionParameters, bool isLarge) {
+		cip::MessageRouterResponse messageRouterResponse;
+		return forwardOpen(si, connectionParameters, isLarge, messageRouterResponse);
+	}
+
+	IOConnection::WPtr
+	ConnectionManager::forwardOpen(const SessionInfoIf::SPtr& si, ConnectionParameters connectionParameters, bool isLarge, cip::MessageRouterResponse& messageRouterResponse) {
 		static int serialNumberCount = 0;
 		connectionParameters.connectionSerialNumber = ++serialNumberCount;
 
@@ -96,7 +102,6 @@ namespace eipScanner {
 		buffer << sockets::EndPoint("0.0.0.0", _bindPort);
 		eip::CommonPacketItem addrItem(eip::CommonPacketItemIds::T2O_SOCKADDR_INFO, buffer.data());
 
-		MessageRouterResponse messageRouterResponse;
 		if (isLarge) {
 			LargeForwardOpenRequest request(connectionParameters);
 			messageRouterResponse = _messageRouter->sendRequest(si,
