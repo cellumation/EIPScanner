@@ -53,6 +53,12 @@ namespace eipScanner {
 		IOConnection::WPtr forwardOpen(const SessionInfoIf::SPtr& si, cip::connectionManager::ConnectionParameters connectionParameters, bool isLarge = false);
 
 		/**
+		 * @brief Same as forwardOpen() but also returns the Message Router response so the caller can inspect the
+		 * general/extended status when the connection could not be opened.
+		 */
+		IOConnection::WPtr forwardOpen(const SessionInfoIf::SPtr& si, cip::connectionManager::ConnectionParameters connectionParameters, bool isLarge, cip::MessageRouterResponse& response);
+
+		/**
 		 * @brief Opens an EIP IO connection with the EIP adapter
 		 * @param si the EIP session for explicit messaging
 		 * @param connectionParameters the parameters of the connection

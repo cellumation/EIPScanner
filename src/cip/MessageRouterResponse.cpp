@@ -81,7 +81,7 @@ namespace cip {
 	void logGeneralAndAdditionalStatus(const MessageRouterResponse &response) {
 		Logger logger(LogLevel::ERROR);
 		logger << "Message Router error=0x"
-			   << std::hex << response.getGeneralStatusCode()
+			   << std::hex << static_cast<int>(response.getGeneralStatusCode())
 			   << " additional statuses ";
 		for (auto& additionalStatus : response.getAdditionalStatus()) {
 			logger << "[0x"
